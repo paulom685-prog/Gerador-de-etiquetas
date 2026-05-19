@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>ShelfLabel Pro - Download PDF | Etiquetas Profissionais</title>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --background: #f0f2f5;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo i {
+            font-size: 1.3rem;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.65rem;
+            margin-left: 0.5rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.02);
+        }
+
+        .header-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.65rem;
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(37,99,235,0.05) 100%);
+            border-top: 2px solid var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 65px;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            padding: 0.8rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border-radius: 0.8rem;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            padding: 0.7rem;
+            border: 1.5px solid var(--border);
+            border-radius: 0.7rem;
+            font-family: inherit;
+            font-size: 0.85rem;
+            background: var(--surface);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Checkbox e Switch */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.7rem;
+            border-radius: 0.7rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* Button Grid */
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        /* Preview A4 - Multi Páginas */
+        .pages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .a4-page {
+            background: white;
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .a4-page.landscape {
+            max-width: 297mm;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.7rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sheet-grid {
+            padding: 3mm;
+            display: grid;
+            gap: 1.5mm;
+            justify-content: center;
+            background: white;
+        }
+
+        /* Etiqueta */
+        .label-item {
+            background: white;
+            border: 0.8px solid #d1d5db;
+            border-radius: 3px;
+            padding: 2mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all 0.1s;
+        }
+
+        .label-item:hover {
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .remove-label-btn {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 9px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .label-item:hover .remove-label-btn {
+            opacity: 1;
+        }
+
+        .label-sku {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1px;
+            word-break: break-word;
+        }
+
+        .label-desc {
+            font-size: 7px;
+            color: var(--text-secondary);
+            line-height: 1.2;
+            margin-bottom: 2px;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .label-price {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--success);
+            margin: 2px 0;
+        }
+
+        .barcode-container {
+            margin: 2px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .barcode-container svg {
+            width: 100%;
+            max-height: 20px;
+        }
+
+        .label-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1px;
+            border-top: 0.3px solid var(--border);
+            font-size: 5px;
+            color: var(--text-muted);
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--background) 0%, white 100%);
+            padding: 0.5rem;
+            border-radius: 0.7rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: white;
+        }
+
+        /* Lista de Produtos */
+        .products-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .product-item {
+            background: var(--background);
+            padding: 0.5rem;
+            border-radius: 0.7rem;
+            margin-bottom: 0.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-sku {
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .product-desc {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        .product-price {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--success);
+            margin-top: 0.2rem;
+        }
+
+        .product-remove {
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Slider Config */
+        .config-slider {
+            margin-bottom: 0.8rem;
+        }
+
+        .config-slider label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            margin-bottom: 0.2rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            padding: 0;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 70px;
+            left: 0.8rem;
+            right: 0.8rem;
+            background: var(--text-primary);
+            color: white;
+            padding: 0.6rem;
+            border-radius: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-size: 0.75rem;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        /* Orientation Buttons */
+        .orient-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .orient-btn {
+            flex: 1;
+            padding: 0.5rem;
+            background: var(--background);
+            border: 1.5px solid var(--border);
+            border-radius: 0.7rem;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .orient-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 0.8rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+            animation: progress 2s ease infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        /* Print */
+        @media print {
+            .app-header, .bottom-nav, .toast, .header-buttons, .product-remove, .remove-label-btn, .page-header, .loading-overlay {
+                display: none !important;
+            }
+            
+            .main-content {
+                padding: 0;
+                overflow: visible;
+            }
+            
+            .screen {
+                display: block !important;
+                padding: 0;
+            }
+            
+            .pages-container {
+                display: block;
+            }
+            
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+                break-after: page;
+            }
+            
+            .a4-page:last-child {
+                page-break-after: auto;
+            }
+            
+            .sheet-grid {
+                padding: 2mm;
+            }
+            
+            .label-item {
+                border: 0.3px solid #999;
+                break-inside: avoid;
+            }
+            
+            @page {
+                size: A4;
+                margin: 5mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <i class="ph ph-tag"></i>
+            <span>Etiquetas Pro</span>
+            <span class="badge">Download PDF</span>
+        </div>
+        <div class="header-buttons">
+            <button class="header-btn" onclick="clearAllLabels()">
+                <i class="ph ph-trash"></i> Limpar
+            </button>
+            <button class="header-btn" onclick="downloadPDF()">
+                <i class="ph ph-download-simple"></i> Baixar PDF
+            </button>
+            <button class="header-btn" onclick="printLabels()">
+                <i class="ph ph-printer"></i> Imprimir
+            </button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <!-- Tela Adicionar -->
+        <div id="addScreen" class="screen active">
+            <div class="card">
+                <div class="card-title">
+                    <i class="ph ph-plus-circle"></i>
+                    Dados do Produto
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">SKU / Código *</label>
+                    <input type="text" id="skuInput" placeholder="Ex: 001-ABC">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Descrição *</label>
+                    <input type="text" id="descInput" placeholder="Ex: Produto Exemplo">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Preço de Venda</label>
+                    <input type="text" id="priceInput" placeholder="Ex: R$ 99,90 ou 99.90">
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showBarcodeCheckbox">
+                    <label>Exibir Código de Barras na etiqueta</label>
+                </div>
+                
+                <button class="btn btn-primary" onclick="addSingleLabel()">
+                    <i class="ph ph-plus"></i>
+                    Adicionar Etiqueta
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i class="ph ph-upload-simple"></i>
+                    Adicionar Múltiplas
+                </div>
+                
+                <div class="form-group">
+                    <textarea id="bulkInput" rows="4" placeholder="Formato: SKU; DESCRIÇÃO; PREÇO&#10;001; Notebook Dell; 3599.90&#10;002; Mouse Gamer; 149.90&#10;003; Teclado Mecânico; 289.90"></textarea>
+                    <small style="font-size: 0.65rem; color: var(--text-muted);">Preço opcional. Separe por ponto e vírgula (;)</small>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="bulkBarcodeCheckbox">
+                    <label>Exibir Código de Barras para todos</label>
+                </div>
+                
+                <button class="btn btn-primary" onclick="addBulkLabels()">
+                    <i class="ph ph-upload-simple"></i>
+                    Adicionar Todas
+                </button>
+            </div>
+
+            <div class="button-grid">
+                <button class="btn btn-outline" onclick="addExampleLabels()">
+                    <i class="ph ph-lightbulb"></i> Exemplos
+                </button>
+                <button class="btn btn-outline" onclick="add20Labels()">
+                    <i class="ph ph-copy"></i> 20 Etiquetas
+                </button>
+                <button class="btn btn-outline" onclick="add50Labels()">
+                    <i class="ph ph-copy"></i> 50 Etiquetas
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela Visualização - Multi Páginas A4 -->
+        <div id="previewScreen" class="screen">
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="stat-value" id="totalLabelsCount">0</div>
+                    <div class="stat-label">Total Etiquetas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPagesCount">0</div>
+                    <div class="stat-label">Páginas A4</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="perPageCount">0</div>
+                    <div class="stat-label">Etq/Página</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="gridInfo">0x0</div>
+                    <div class="stat-label">Col x Lin</div>
+                </div>
+            </div>
+
+            <div id="pagesContainer" class="pages-container">
+                <div class="empty-state">
+                    <i class="ph ph-tag"></i>
+                    <p>Nenhuma etiqueta adicionada</p>
+                    <p style="font-size: 0.65rem;">Adicione produtos na tela "Adicionar"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Configurações -->
+        <div id="settingsScreen" class="screen">
+            <div class="card">
+                <div class="card-title">
+                    <i class="ph ph-sliders"></i>
+                    Configurações Globais
+                </div>
+                
+                <div class="orient-group">
+                    <div class="orient-btn active" onclick="setOrientation('portrait')">
+                        <i class="ph ph-phone"></i> Retrato
+                    </div>
+                    <div class="orient-btn" onclick="setOrientation('landscape')">
+                        <i class="ph ph-device-mobile"></i> Paisagem
+                    </div>
+                </div>
+                
+                <div class="config-slider">
+                    <label>
+                        <span>📏 Largura da Etiqueta (mm)</span>
+                        <span id="widthValue">45mm</span>
+                    </label>
+                    <input type="range" id="labelWidthSlider" min="30" max="90" value="45" step="1" oninput="updateLabelSize()">
+                </div>
+                
+                <div class="config-slider">
+                    <label>
+                        <span>📐 Altura da Etiqueta (mm)</span>
+                        <span id="heightValue">25mm</span>
+                    </label>
+                    <input type="range" id="labelHeightSlider" min="20" max="60" value="25" step="1" oninput="updateLabelSize()">
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="globalBarcodeCheckbox" onchange="toggleGlobalBarcode()">
+                    <label>Exibir Código de Barras (Global)</label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i class="ph ph-list"></i>
+                    Lista de Produtos
+                </div>
+                <div id="productsList" class="products-list">
+                    <div class="empty-state">
+                        <i class="ph ph-inbox"></i>
+                        <p>Nenhum produto</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchScreen('add')">
+            <i class="ph ph-plus-circle"></i>
+            <span>Adicionar</span>
+        </button>
+        <button class="nav-item" onclick="switchScreen('preview')">
+            <i class="ph ph-eye"></i>
+            <span>Visualizar</span>
+        </button>
+        <button class="nav-item" onclick="switchScreen('settings')">
+            <i class="ph ph-sliders"></i>
+            <span>Ajustes</span>
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p><strong>Gerando PDF...</strong></p>
+            <p style="font-size: 0.7rem; margin-top: 0.5rem;">Preparando etiquetas</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <p style="font-size: 0.7rem; margin-top: 0.8rem;">O download começará em instantes</p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <i class="ph ph-check-circle"></i>
+        <span id="toastMsg">Operação concluída!</span>
+    </div>
+
+    <script>
+        // State
+        let labels = [];
+        let nextId = 1;
+        let currentOrientation = 'portrait';
+        let globalShowBarcode = false;
+
+        // DOM Elements
+        const skuInput = document.getElementById('skuInput');
+        const descInput = document.getElementById('descInput');
+        const priceInput = document.getElementById('priceInput');
+        const bulkInput = document.getElementById('bulkInput');
+        const pagesContainer = document.getElementById('pagesContainer');
+        const productsList = document.getElementById('productsList');
+        const totalLabelsCount = document.getElementById('totalLabelsCount');
+        const totalPagesCount = document.getElementById('totalPagesCount');
+        const perPageCount = document.getElementById('perPageCount');
+        const gridInfo = document.getElementById('gridInfo');
+        const labelWidthSlider = document.getElementById('labelWidthSlider');
+        const labelHeightSlider = document.getElementById('labelHeightSlider');
+        const widthValue = document.getElementById('widthValue');
+        const heightValue = document.getElementById('heightValue');
+        const showBarcodeCheckbox = document.getElementById('showBarcodeCheckbox');
+        const bulkBarcodeCheckbox = document.getElementById('bulkBarcodeCheckbox');
+        const globalBarcodeCheckbox = document.getElementById('globalBarcodeCheckbox');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+
+        // Calcular layout por página
+        function calculateLayout() {
+            const labelWidth = parseFloat(labelWidthSlider.value);
+            const labelHeight = parseFloat(labelHeightSlider.value);
+            const margin = 3;
+            const gap = 1.5;
+            
+            let pageWidth, pageHeight;
+            if (currentOrientation === 'portrait') {
+                pageWidth = 210;
+                pageHeight = 297;
+            } else {
+                pageWidth = 297;
+                pageHeight = 210;
+            }
+            
+            const usableWidth = pageWidth - (margin * 2);
+            const usableHeight = pageHeight - (margin * 2);
+            
+            const cols = Math.floor((usableWidth + gap) / (labelWidth + gap));
+            const rows = Math.floor((usableHeight + gap) / (labelHeight + gap));
+            const labelsPerPage = Math.max(1, cols * rows);
+            
+            return { cols, rows, labelsPerPage, labelWidth, labelHeight };
+        }
+
+        // Render múltiplas páginas A4
+        async function renderPages() {
+            if (!pagesContainer) return;
+            
+            if (labels.length === 0) {
+                pagesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ph ph-tag"></i>
+                        <p>Nenhuma etiqueta adicionada</p>
+                        <p style="font-size: 0.65rem;">Adicione produtos na tela "Adicionar"</p>
+                    </div>
+                `;
+                updateStats();
+                return;
+            }
+            
+            const { cols, rows, labelsPerPage, labelWidth, labelHeight } = calculateLayout();
+            const totalPages = Math.ceil(labels.length / labelsPerPage);
+            
+            updateStats();
+            gridInfo.textContent = `${cols}x${rows}`;
+            
+            pagesContainer.innerHTML = '';
+            
+            for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+                const startIdx = pageNum * labelsPerPage;
+                const endIdx = Math.min(startIdx + labelsPerPage, labels.length);
+                const pageLabels = labels.slice(startIdx, endIdx);
+                
+                const pageDiv = document.createElement('div');
+                pageDiv.className = `a4-page ${currentOrientation === 'landscape' ? 'landscape' : ''}`;
+                
+                const pageHeader = document.createElement('div');
+                pageHeader.className = 'page-header';
+                pageHeader.innerHTML = `
+                    <span><i class="ph ph-file-text"></i> Página ${pageNum + 1} de ${totalPages}</span>
+                    <span>${pageLabels.length} etiquetas</span>
+                `;
+                
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'sheet-grid';
+                gridDiv.style.gridTemplateColumns = `repeat(${cols}, minmax(${labelWidth}mm, ${labelWidth}mm))`;
+                
+                for (const label of pageLabels) {
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'label-item';
+                    labelDiv.style.width = `${labelWidth}mm`;
+                    labelDiv.style.height = `${labelHeight}mm`;
+                    
+                    let content = `
+                        <div class="remove-label-btn" onclick="removeLabel(${label.id})">
+                            <i class="ph ph-x"></i>
+                        </div>
+                        <div class="label-sku">${escapeHtml(label.sku)}</div>
+                        <div class="label-desc">${escapeHtml(label.desc)}</div>
+                    `;
+                    
+                    if (label.price && label.price !== '') {
+                        content += `<div class="label-price">${formatPrice(label.price)}</div>`;
+                    }
+                    
+                    const showBarcode = globalShowBarcode || (label.showBarcode === true);
+                    if (showBarcode && label.sku) {
+                        content += `<div class="barcode-container" id="barcode-${label.id}"></div>`;
+                    }
+                    
+                    content += `
+                        <div class="label-footer">
+                            <span>SKU</span>
+                            <span>QTD:01</span>
+                        </div>
+                    `;
+                    
+                    labelDiv.innerHTML = content;
+                    gridDiv.appendChild(labelDiv);
+                    
+                    if (showBarcode && label.sku) {
+                        setTimeout(() => {
+                            const barcodeContainer = labelDiv.querySelector(`.barcode-container`);
+                            if (barcodeContainer && typeof JsBarcode !== 'undefined') {
+                                try {
+                                    JsBarcode(barcodeContainer, label.sku, {
+                                        format: "CODE128",
+                                        width: 0.8,
+                                        height: 15,
+                                        fontSize: 8,
+                                        margin: 0,
+                                        displayValue: true
+                                    });
+                                } catch(e) {
+                                    console.error('Barcode error:', e);
+                                }
+                            }
+                        }, 10);
+                    }
+                }
+                
+                pageDiv.appendChild(pageHeader);
+                pageDiv.appendChild(gridDiv);
+                pagesContainer.appendChild(pageDiv);
+            }
+        }
+
+        function formatPrice(price) {
+            if (!price) return '';
+            let cleanPrice = price.toString().replace(/R\$|₢/gi, '').trim();
+            cleanPrice = cleanPrice.replace(',', '.');
+            const num = parseFloat(cleanPrice);
+            if (isNaN(num)) return price;
+            return `R$ ${num.toFixed(2).replace('.', ',')}`;
+        }
+
+        function updateStats() {
+            const { labelsPerPage } = calculateLayout();
+            const totalPages = Math.ceil(labels.length / labelsPerPage);
+            totalLabelsCount.textContent = labels.length;
+            totalPagesCount.textContent = totalPages;
+            perPageCount.textContent = labelsPerPage;
+        }
+
+        function renderProductsList() {
+            if (!productsList) return;
+            
+            if (labels.length === 0) {
+                productsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ph ph-inbox"></i>
+                        <p>Nenhum produto</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            productsList.innerHTML = '';
+            labels.forEach(label => {
+                const item = document.createElement('div');
+                item.className = 'product-item';
+                item.innerHTML = `
+                    <div class="product-info">
+                        <div class="product-sku">${escapeHtml(label.sku)}</div>
+                        <div class="product-desc">${escapeHtml(label.desc)}</div>
+                        ${label.price ? `<div class="product-price">${formatPrice(label.price)}</div>` : ''}
+                        ${label.showBarcode ? '<div style="font-size: 0.6rem; color: var(--primary);"><i class="ph ph-barcode"></i> Com barras</div>' : ''}
+                    </div>
+                    <button class="product-remove" onclick="removeLabel(${label.id})">
+                        <i class="ph ph-trash"></i>
+                    </button>
+                `;
+                productsList.appendChild(item);
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            toastMsg.textContent = message;
+            const icon = toast.querySelector('i');
+            icon.className = type === 'error' ? 'ph ph-warning-circle' : 'ph ph-check-circle';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add single label
+        function addSingleLabel() {
+            const sku = skuInput.value.trim();
+            const desc = descInput.value.trim();
+            
+            if (!sku || !desc) {
+                showToast('Preencha SKU e Descrição', 'error');
+                return;
+            }
+            
+            const price = priceInput.value.trim();
+            const showBarcode = showBarcodeCheckbox.checked;
+            
+            labels.push({ 
+                id: nextId++, 
+                sku, 
+                desc, 
+                price: price || null,
+                showBarcode: showBarcode
+            });
+            
+            skuInput.value = '';
+            descInput.value = '';
+            priceInput.value = '';
+            
+            renderPages();
+            renderProductsList();
+            showToast(`Etiqueta ${sku} adicionada!`);
+            saveToLocalStorage();
+        }
+
+        // Add bulk labels
+        function addBulkLabels() {
+            const rawText = bulkInput.value.trim();
+            if (!rawText) {
+                showToast('Cole os dados no campo', 'error');
+                return;
+            }
+            
+            const lines = rawText.split('\n');
+            let added = 0;
+            const showBarcode = bulkBarcodeCheckbox.checked;
+            
+            lines.forEach(line => {
+                line = line.trim();
+                if (line === '') return;
+                
+                const parts = line.split(';');
+                if (parts.length >= 2) {
+                    const sku = parts[0].trim();
+                    const desc = parts[1].trim();
+                    let price = null;
+                    if (parts.length >= 3 && parts[2].trim()) {
+                        price = parts[2].trim();
+                    }
+                    if (sku && desc) {
+                        labels.push({ id: nextId++, sku, desc, price, showBarcode });
+                        added++;
+                    }
+                }
+            });
+            
+            if (added > 0) {
+                bulkInput.value = '';
+                renderPages();
+                renderProductsList();
+                showToast(`${added} etiquetas adicionadas!`);
+                saveToLocalStorage();
+            } else {
+                showToast('Nenhum dado válido. Use: SKU; DESCRIÇÃO; PREÇO', 'error');
+            }
+        }
+
+        // Add example labels
+        function addExampleLabels() {
+            const examples = [
+                { sku: '001-MOB', desc: 'Smartphone Galaxy S23', price: '3599.90', showBarcode: true },
+                { sku: '002-NB', desc: 'Notebook Dell Inspiron', price: '4899.00', showBarcode: true },
+                { sku: '003-MOU', desc: 'Mouse Gamer RGB 7 Botões', price: '149.90', showBarcode: false },
+                { sku: '004-TEC', desc: 'Teclado Mecânico Switch Azul', price: '289.90', showBarcode: true },
+                { sku: '005-MON', desc: 'Monitor 24 Pol 144Hz', price: '1299.90', showBarcode: false },
+                { sku: '006-CAI', desc: 'Caixa de Som Bluetooth', price: '199.90', showBarcode: true },
+                { sku: '007-FON', desc: 'Headphone Estéreo', price: '89.90', showBarcode: false },
+                { sku: '008-TAB', desc: 'Tablet 10 Polegadas', price: '1599.90', showBarcode: true },
+                { sku: '009-FONE', desc: 'Fone de Ouvido Bluetooth', price: '199.90', showBarcode: false },
+                { sku: '010-CAR', desc: 'Carregador Portátil 20000mAh', price: '149.90', showBarcode: true }
+            ];
+            examples.forEach(ex => {
+                labels.push({ id: nextId++, ...ex });
+            });
+            renderPages();
+            renderProductsList();
+            showToast('10 produtos de exemplo adicionados!');
+            saveToLocalStorage();
+        }
+
+        function add20Labels() {
+            for (let i = 1; i <= 20; i++) {
+                labels.push({
+                    id: nextId++,
+                    sku: `PROD-${String(labels.length + 1).padStart(3, '0')}`,
+                    desc: `Produto Exemplo ${labels.length + 1} - Descrição detalhada`,
+                    price: (Math.random() * 500 + 10).toFixed(2),
+                    showBarcode: i % 2 === 0
+                });
+            }
+            renderPages();
+            renderProductsList();
+            showToast('20 etiquetas adicionadas!');
+            saveToLocalStorage();
+        }
+
+        function add50Labels() {
+            for (let i = 1; i <= 50; i++) {
+                labels.push({
+                    id: nextId++,
+                    sku: `ITEM-${String(labels.length + 1).padStart(3, '0')}`,
+                    desc: `Item de Estoque ${labels.length + 1}`,
+                    price: (Math.random() * 1000 + 50).toFixed(2),
+                    showBarcode: i % 3 === 0
+                });
+            }
+            renderPages();
+            renderProductsList();
+            showToast('50 etiquetas adicionadas!');
+            saveToLocalStorage();
+        }
+
+        // Remove label
+        function removeLabel(id) {
+            labels = labels.filter(l => l.id !== id);
+            renderPages();
+            renderProductsList();
+            showToast('Etiqueta removida', 'error');
+            saveToLocalStorage();
+        }
+
+        // Clear all
+        function clearAllLabels() {
+            if (labels.length === 0) {
+                showToast('Nenhuma etiqueta para remover', 'error');
+                return;
+            }
+            
+            if (confirm(`Remover ${labels.length} etiqueta(s)?`)) {
+                labels = [];
+                renderPages();
+                renderProductsList();
+                showToast('Todas etiquetas removidas');
+                saveToLocalStorage();
+            }
+        }
+
+        // Set orientation
+        function setOrientation(orientation) {
+            currentOrientation = orientation;
+            
+            document.querySelectorAll('.orient-btn').forEach(btn => btn.classList.remove('active'));
+            if (orientation === 'portrait') {
+                document.querySelector('.orient-btn:first-child').classList.add('active');
+            } else {
+                document.querySelector('.orient-btn:last-child').classList.add('active');
+            }
+            
+            renderPages();
+            saveToLocalStorage();
+        }
+
+        // Update label size
+        function updateLabelSize() {
+            const width = labelWidthSlider.value;
+            const height = labelHeightSlider.value;
+            widthValue.textContent = `${width}mm`;
+            heightValue.textContent = `${height}mm`;
+            renderPages();
+            saveToLocalStorage();
+        }
+
+        // Toggle global barcode
+        function toggleGlobalBarcode() {
+            globalShowBarcode = globalBarcodeCheckbox.checked;
+            renderPages();
+            saveToLocalStorage();
+        }
+
+        // FUNÇÃO DE DOWNLOAD PDF - Salva diretamente no dispositivo
+        async function downloadPDF() {
+            if (labels.length === 0) {
+                showToast('Adicione etiquetas antes de baixar o PDF', 'error');
+                return;
+            }
+            
+            // Mostrar loading
+            loadingOverlay.classList.add('active');
+            
+            try {
+                // Garantir que o preview esteja atualizado
+                await renderPages();
+                
+                // Pequeno delay para garantir que os códigos de barras sejam gerados
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Elemento a ser convertido para PDF
+                const element = document.getElementById('pagesContainer');
+                
+                // Nome do arquivo com data e hora
+                const now = new Date();
+                const fileName = `etiquetas_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}.pdf`;
+                
+                // Configurações do PDF
+                const opt = {
+                    margin: [0.3, 0.3, 0.3, 0.3], // margens em cm
+                    filename: fileName,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2.5,
+                        useCORS: true,
+                        logging: false,
+                        letterRendering: true,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { 
+                        unit: 'cm', 
+                        format: currentOrientation === 'portrait' ? 'a4' : 'a4-landscape',
+                        orientation: currentOrientation === 'portrait' ? 'portrait' : 'landscape'
+                    }
+                };
+                
+                // Gerar PDF e fazer download automático
+                await html2pdf().set(opt).from(element).save();
+                
+                // Mostrar mensagem de sucesso
+                showToast(`PDF salvo! 📁 ${fileName}`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                showToast('Erro ao gerar PDF. Tente novamente.', 'error');
+            } finally {
+                // Esconder loading
+                setTimeout(() => {
+                    loadingOverlay.classList.remove('active');
+                }, 500);
+            }
+        }
+
+        // Print
+        function printLabels() {
+            if (labels.length === 0) {
+                showToast('Adicione etiquetas antes de imprimir', 'error');
+                return;
+            }
+            
+            showToast('Preparando impressão...');
+            
+            const style = document.createElement('style');
+            if (currentOrientation === 'landscape') {
+                style.textContent = `@page { size: A4 landscape; margin: 5mm; }`;
+            } else {
+                style.textContent = `@page { size: A4 portrait; margin: 5mm; }`;
+            }
+            document.head.appendChild(style);
+            
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => document.head.removeChild(style), 500);
+            }, 100);
+        }
+
+        // Switch screen
+        function switchScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if (screen === 'add') {
+                document.getElementById('addScreen').classList.add('active');
+                document.querySelector('.nav-item:first-child').classList.add('active');
+            } else if (screen === 'preview') {
+                document.getElementById('previewScreen').classList.add('active');
+                document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+                renderPages();
+            } else {
+                document.getElementById('settingsScreen').classList.add('active');
+                document.querySelector('.nav-item:last-child').classList.add('active');
+                renderProductsList();
+            }
+        }
+
+        // Save to localStorage
+        function saveToLocalStorage() {
+            const data = {
+                labels,
+                nextId,
+                orientation: currentOrientation,
+                labelWidth: labelWidthSlider.value,
+                labelHeight: labelHeightSlider.value,
+                globalShowBarcode
+            };
+            localStorage.setItem('multi_page_labels_pdf_download', JSON.stringify(data));
+        }
+
+        // Load from localStorage
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('multi_page_labels_pdf_download');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    labels = data.labels || [];
+                    nextId = data.nextId || 1;
+                    currentOrientation = data.orientation || 'portrait';
+                    labelWidthSlider.value = data.labelWidth || '45';
+                    labelHeightSlider.value = data.labelHeight || '25';
+                    globalShowBarcode = data.globalShowBarcode || false;
+                    globalBarcodeCheckbox.checked = globalShowBarcode;
+                    widthValue.textContent = `${labelWidthSlider.value}mm`;
+                    heightValue.textContent = `${labelHeightSlider.value}mm`;
+                    setOrientation(currentOrientation);
+                    renderPages();
+                    renderProductsList();
+                } catch (e) {}
+            }
+        }
+
+        // Verificar se é dispositivo móvel para mensagem adicional
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // Global functions
+        window.addSingleLabel = addSingleLabel;
+        window.addBulkLabels = addBulkLabels;
+        window.addExampleLabels = addExampleLabels;
+        window.add20Labels = add20Labels;
+        window.add50Labels = add50Labels;
+        window.removeLabel = removeLabel;
+        window.clearAllLabels = clearAllLabels;
+        window.printLabels = printLabels;
+        window.downloadPDF = downloadPDF;
+        window.switchScreen = switchScreen;
+        window.setOrientation = setOrientation;
+        window.updateLabelSize = updateLabelSize;
+        window.toggleGlobalBarcode = toggleGlobalBarcode;
+
+        // Initialize
+        loadFromLocalStorage();
+        
+        // Mensagem de boas-vindas
+        setTimeout(() => {
+            if (isMobileDevice()) {
+                showToast('📱 App pronto! Toque em "Baixar PDF" para salvar as etiquetas', 'success');
+            } else {
+                showToast('✅ App pronto! Adicione produtos e clique em "Baixar PDF"', 'success');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
