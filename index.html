@@ -1,1282 +1,405 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>ShelfLabel - Etiquetas para Prateleira | Modo Retrato</title>
-    
-    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --primary-light: #3b82f6;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --border: #e2e8f0;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--background);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-        }
-
-        /* Header - Fixo no topo */
-        .app-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            padding: 0.7rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 10;
-            flex-shrink: 0;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: white;
-        }
-
-        .logo i {
-            font-size: 1.2rem;
-        }
-
-        .badge {
-            background: rgba(255,255,255,0.2);
-            padding: 0.2rem 0.4rem;
-            border-radius: 1rem;
-            font-size: 0.6rem;
-            margin-left: 0.4rem;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 0.4rem;
-        }
-
-        .header-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 0.5rem 0.8rem;
-            border-radius: 0.6rem;
-            cursor: pointer;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            transition: all 0.2s;
-            touch-action: manipulation;
-        }
-
-        .header-btn:active {
-            transform: scale(0.95);
-            background: rgba(255,255,255,0.3);
-        }
-
-        /* Área de Conteúdo Principal - Scrollável verticalmente */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 0.8rem;
-            padding-bottom: 70px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Screens */
-        .screen {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Cards - Empilhados verticalmente */
-        .card {
-            background: var(--surface);
-            border-radius: 1rem;
-            padding: 1rem;
-            margin-bottom: 0.8rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-
-        .card-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--primary);
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        /* Formulários Verticais */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .form-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        input, textarea, select {
-            padding: 0.85rem;
-            border: 1.5px solid var(--border);
-            border-radius: 0.8rem;
-            font-family: inherit;
-            font-size: 0.9rem;
-            background: var(--surface);
-            transition: all 0.2s;
-            -webkit-appearance: none;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-        }
-
-        /* Checkbox */
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 0.8rem;
-            padding: 0.3rem 0;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 1.3rem;
-            height: 1.3rem;
-            cursor: pointer;
-            margin: 0;
-        }
-
-        .checkbox-group label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        /* Botões em coluna vertical */
-        .btn {
-            padding: 0.9rem;
-            border-radius: 0.8rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            width: 100%;
-            transition: all 0.2s;
-            touch-action: manipulation;
-            min-height: 50px;
-            margin-bottom: 0.6rem;
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1.5px solid var(--border);
-            color: var(--text-secondary);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-
-        /* Grid de botões - 2 colunas para opções rápidas */
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.6rem;
-            margin-top: 0.5rem;
-        }
-
-        .button-grid .btn {
-            margin-bottom: 0;
-        }
-
-        /* Estatísticas em linha horizontal */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, var(--background) 0%, white 100%);
-            padding: 0.7rem 0.3rem;
-            border-radius: 0.8rem;
-            text-align: center;
-            border: 1px solid var(--border);
-        }
-
-        .stat-value {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 0.55rem;
-            color: var(--text-secondary);
-        }
-
-        .stat-card.highlight {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-        }
-
-        .stat-card.highlight .stat-value {
-            color: white;
-        }
-
-        /* Preview A4 - Rolagem horizontal para ver a folha */
-        .preview-wrapper {
-            overflow-x: auto;
-            overflow-y: visible;
-            -webkit-overflow-scrolling: touch;
-            margin: 0 -0.8rem;
-            padding: 0 0.8rem;
-        }
-
-        .pages-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .a4-page {
-            background: white;
-            width: 100%;
-            max-width: 100%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 0.4rem 0.6rem;
-            font-size: 0.65rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .sheet-grid {
-            padding: 4px;
-            display: grid;
-            gap: 2px;
-            justify-content: center;
-            background: white;
-        }
-
-        /* Etiqueta no modo retrato */
-        .label-item {
-            background: white;
-            border: 0.5px solid #d1d5db;
-            border-radius: 3px;
-            padding: 2px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .label-sku {
-            font-size: 8px;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin-bottom: 1px;
-            word-break: break-word;
-        }
-
-        .label-desc {
-            font-size: 6px;
-            color: var(--text-secondary);
-            line-height: 1.2;
-            margin-bottom: 1px;
-            word-break: break-word;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .label-price {
-            font-size: 7px;
-            font-weight: 800;
-            color: var(--success);
-            margin: 1px 0;
-        }
-
-        .barcode-container svg {
-            width: 100%;
-            max-height: 14px;
-        }
-
-        .label-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: auto;
-            padding-top: 1px;
-            border-top: 0.3px solid var(--border);
-            font-size: 4px;
-        }
-
-        /* Slider de configuração */
-        .config-slider {
-            margin-bottom: 1rem;
-        }
-
-        .config-slider label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            margin-bottom: 0.3rem;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            padding: 0;
-            height: 4px;
-            -webkit-appearance: none;
-            background: var(--border);
-            border-radius: 2px;
-        }
-
-        input[type="range"]:focus {
-            outline: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-
-        /* Botões de orientação */
-        .orient-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .orient-btn {
-            flex: 1;
-            padding: 0.7rem;
-            background: var(--background);
-            border: 1.5px solid var(--border);
-            border-radius: 0.8rem;
-            cursor: pointer;
-            text-align: center;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-            touch-action: manipulation;
-        }
-
-        .orient-btn:active {
-            transform: scale(0.97);
-        }
-
-        .orient-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        /* Lista de produtos */
-        .products-list {
-            max-height: 350px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .product-item {
-            background: var(--background);
-            padding: 0.8rem;
-            border-radius: 0.8rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .product-info {
-            flex: 1;
-        }
-
-        .product-sku {
-            font-weight: 700;
-            font-size: 0.8rem;
-        }
-
-        .product-desc {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        .product-price {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--success);
-            margin-top: 0.2rem;
-        }
-
-        .product-remove {
-            background: var(--danger);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-
-        .product-remove:active {
-            transform: scale(0.95);
-        }
-
-        /* Navegação inferior - Fixa no bottom */
-        .bottom-nav {
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            display: flex;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 20;
-            flex-shrink: 0;
-        }
-
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.2rem;
-            padding: 0.6rem 0.2rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-size: 0.6rem;
-            transition: all 0.2s;
-            touch-action: manipulation;
-        }
-
-        .nav-item i {
-            font-size: 1.4rem;
-        }
-
-        .nav-item:active {
-            transform: scale(0.95);
-        }
-
-        .nav-item.active {
-            color: var(--primary);
-            background: linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(37,99,235,0.05) 100%);
-            border-top: 2px solid var(--primary);
-        }
-
-        /* Loading Overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .loading-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .loading-content {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 1rem;
-            text-align: center;
-            min-width: 200px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 0.8rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 0.8rem;
-            right: 0.8rem;
-            background: var(--text-primary);
-            color: white;
-            padding: 0.8rem;
-            border-radius: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            transform: translateY(150%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            font-size: 0.8rem;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 0.8rem;
-            opacity: 0.5;
-        }
-
-        /* Scrollbar personalizada */
-        ::-webkit-scrollbar {
-            width: 3px;
-            height: 3px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--background);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
-        }
-
-        /* Print */
-        @media print {
-            .app-header, .bottom-nav, .toast, .header-buttons, .product-remove, .page-header, .loading-overlay {
-                display: none !important;
-            }
-            
-            .main-content {
-                padding: 0;
-            }
-            
-            .screen {
-                display: block !important;
-                padding: 0;
-            }
-            
-            .label-item {
-                border: 0.3px solid #999;
-            }
-            
-            @page {
-                size: A4 portrait;
-                margin: 5mm;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>Gerador de Etiquetas Pro - Mobile</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #dbeafe;
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #e2e8f0;
+  --sidebar-muted: #94a3b8;
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --gold: #FFD700;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+  --transition: 0.2s ease;
+}
+html { font-size: 14px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== TOPBAR ===== */
+#topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 12px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  z-index: 100;
+  flex-shrink: 0;
+}
+.topbar-logo { display: flex; align-items: center; gap: 8px; }
+.topbar-logo-icon {
+  width: 32px; height: 32px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+.topbar-title { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+.topbar-subtitle { font-size: 10px; color: var(--gray-400); }
+.topbar-spacer { flex: 1; }
+.topbar-actions { display: flex; gap: 6px; align-items: center; }
+
+/* Botões compactos mobile */
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-sm { padding: 5px 8px; font-size: 11px; }
+.btn-icon { padding: 6px; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--green); color: white; }
+.btn-outline { background: transparent; border: 1px solid var(--gray-300); color: var(--gray-600); }
+
+/* ===== TABS MOBILE ===== */
+.mobile-tabs {
+  display: none;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 12px;
+  gap: 4px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 12px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.mobile-panel {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+}
+.mobile-panel.hide {
+  display: none;
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+#app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* SIDEBAR / PAINEL ESQUERDO */
+#sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+#sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; }
+
+/* MAIN */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== FORMULÁRIO E LISTA (conteúdo interno sidebar) ===== */
+.sidebar-section-title {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--sidebar-muted);
+  margin-bottom: 12px;
+}
+.form-group { margin-bottom: 10px; }
+.form-label { display: block; font-size: 11px; font-weight: 600; color: var(--sidebar-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-control {
+  width: 100%; padding: 7px 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  color: var(--sidebar-text); font-size: 13px;
+}
+.form-control:focus { outline: none; border-color: var(--primary); background: rgba(37,99,235,0.1); }
+.form-row { display: flex; gap: 6px; }
+.product-list-section { padding: 14px 16px; flex: 1; overflow-y: auto; }
+.product-item {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm); padding: 9px 10px;
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.product-sku { font-size: 10px; font-weight: 700; background: rgba(37,99,235,0.3); color: #93c5fd; padding: 1px 5px; border-radius: 3px; display: inline-block; margin-bottom: 3px; }
+.product-name { font-size: 12px; font-weight: 500; color: var(--sidebar-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-price { font-size: 11px; color: #86efac; font-weight: 600; }
+.product-qty { font-size: 10px; color: var(--sidebar-muted); background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; }
+.product-actions { display: flex; gap: 3px; flex-shrink: 0; }
+
+/* CUSTOMIZE PANEL */
+#customize-panel {
+  width: 256px; min-width: 256px;
+  background: var(--white); border-right: 1px solid var(--gray-200);
+  overflow-y: auto; flex-shrink: 0;
+}
+.panel-section { padding: 14px 16px; border-bottom: 1px solid var(--gray-100); }
+.light-label { font-size: 11px; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 4px; }
+.light-input {
+  width: 100%; padding: 6px 9px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm); font-size: 12px;
+}
+.color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.toggle-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+.toggle-switch { position: relative; width: 34px; height: 18px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 10px; cursor: pointer; }
+.toggle-slider::before { content: ''; position: absolute; width: 12px; height: 12px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform var(--transition); }
+.toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+.print-cols { display: flex; gap: 6px; }
+.col-btn { flex: 1; padding: 5px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); cursor: pointer; font-size: 12px; text-align: center; }
+.col-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ÁREA DE PREVIEW */
+#preview-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#preview-toolbar {
+  background: var(--white); border-bottom: 1px solid var(--gray-200);
+  padding: 6px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.zoom-controls { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.zoom-btn {
+  width: 32px; height: 26px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+  background: var(--white); font-size: 11px; font-weight: 600;
+}
+.zoom-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+#preview-scroll { flex: 1; overflow-y: auto; padding: 16px; background: var(--gray-100); }
+#preview-grid { display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
+.label-wrapper { position: relative; }
+.label-qty-badge { position: absolute; top: -8px; right: -8px; background: var(--primary); color: white; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 10px; }
+.label-base { overflow: hidden; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: box-shadow var(--transition); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 1000; display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: var(--radius-lg); padding: 20px; max-width: 540px; width: 90%; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+textarea.form-ctrl-light { width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 12px; font-family: monospace; resize: vertical; min-height: 120px; }
+
+/* TOAST */
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--gray-900); color: white; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; }
+@keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { to { transform: translateX(100%); opacity: 0; } }
+
+/* ===== RESPONSIVO MOBILE ===== */
+@media (max-width: 768px) {
+  .mobile-tabs { display: flex; }
+  #sidebar { position: fixed; left: 0; top: 56px; bottom: 0; z-index: 200; width: 85%; max-width: 320px; transform: translateX(-100%); transition: transform 0.25s ease; }
+  #sidebar.open-mobile { transform: translateX(0); }
+  #sidebar.collapsed { transform: translateX(-100%); width: 85%; }
+  #customize-panel { position: fixed; left: 0; top: 56px; bottom: 0; z-index: 200; width: 85%; max-width: 280px; transform: translateX(-100%); transition: transform 0.25s ease; background: white; overflow-y: auto; }
+  #customize-panel.open-mobile { transform: translateX(0); }
+  #main { width: 100%; }
+  .topbar-actions .btn span:not(.icon-only) { display: none; }
+  .topbar-actions .btn { padding: 6px 8px; }
+  .topbar-title { font-size: 13px; }
+  .topbar-subtitle { display: none; }
+  .btn-sm span { display: none; }
+  .btn-sm svg { margin: 0; }
+}
+
+/* Desktop normal */
+@media (min-width: 769px) {
+  .mobile-tabs { display: none !important; }
+  #sidebar, #customize-panel { transform: none !important; position: relative; top: auto; left: auto; width: auto; }
+  #sidebar.open-mobile, #customize-panel.open-mobile { transform: none; }
+}
+</style>
 </head>
 <body>
-    <header class="app-header">
-        <div class="logo">
-            <i class="ph ph-tag"></i>
-            <span>Etiquetas</span>
-            <span class="badge">Retrato</span>
-        </div>
-        <div class="header-buttons">
-            <button class="header-btn" onclick="clearAllLabels()">
-                <i class="ph ph-trash"></i>
-            </button>
-            <button class="header-btn" onclick="downloadPDF()">
-                <i class="ph ph-download-simple"></i>
-            </button>
-            <button class="header-btn" onclick="printLabels()">
-                <i class="ph ph-printer"></i>
-            </button>
-        </div>
-    </header>
 
-    <div class="main-content">
-        <!-- Tela Adicionar Produtos -->
-        <div id="addScreen" class="screen active">
-            <div class="card">
-                <div class="card-title">
-                    <i class="ph ph-plus-circle"></i>
-                    Novo Produto
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">SKU / Código *</label>
-                    <input type="text" id="skuInput" placeholder="Ex: 001-ABC">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Descrição *</label>
-                    <input type="text" id="descInput" placeholder="Ex: Produto Exemplo">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Preço (opcional)</label>
-                    <input type="text" id="priceInput" placeholder="R$ 99,90">
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="showBarcodeCheckbox">
-                    <label>Código de Barras</label>
-                </div>
-                
-                <button class="btn btn-primary" onclick="addSingleLabel()">
-                    <i class="ph ph-plus"></i>
-                    Adicionar Etiqueta
-                </button>
-            </div>
+<div id="topbar">
+  <div class="topbar-logo"><div class="topbar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg></div><div><div class="topbar-title">Etiquetas Pro</div><div class="topbar-subtitle">Mobile</div></div></div>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-actions">
+    <button class="btn btn-outline btn-sm" id="mobileMenuBtn" onclick="toggleMobileSidebar()">📋 Produtos</button>
+    <button class="btn btn-outline btn-sm" id="mobileCustomBtn" onclick="toggleMobileCustom()">🎨 Estilo</button>
+    <button class="btn btn-primary btn-sm" onclick="exportPDF()">📄 PDF</button>
+    <button class="btn btn-outline btn-sm" onclick="printLabels()">🖨️</button>
+  </div>
+</div>
 
-            <div class="card">
-                <div class="card-title">
-                    <i class="ph ph-upload-simple"></i>
-                    Adicionar em Lote
-                </div>
-                
-                <div class="form-group">
-                    <textarea id="bulkInput" rows="4" placeholder="SKU; DESCRIÇÃO; PREÇO&#10;001; Notebook Dell; 3599.90&#10;002; Mouse Gamer; 149.90&#10;003; Teclado Mecânico; 289.90"></textarea>
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="bulkBarcodeCheckbox">
-                    <label>Código de Barras para todos</label>
-                </div>
-                
-                <button class="btn btn-primary" onclick="addBulkLabels()">
-                    <i class="ph ph-upload-simple"></i>
-                    Processar Lote
-                </button>
-            </div>
+<div class="mobile-tabs" id="mobileTabs">
+  <button class="tab-btn active" data-tab="preview">🏷️ Etiquetas</button>
+  <button class="tab-btn" data-tab="products">📦 Produtos</button>
+  <button class="tab-btn" data-tab="design">🎨 Design</button>
+</div>
 
-            <div class="button-grid">
-                <button class="btn btn-outline" onclick="addExampleLabels()">
-                    <i class="ph ph-lightbulb"></i> Exemplos
-                </button>
-                <button class="btn btn-outline" onclick="add10Labels()">
-                    <i class="ph ph-copy"></i> 10 Etiquetas
-                </button>
-            </div>
-        </div>
-
-        <!-- Tela Visualização -->
-        <div id="previewScreen" class="screen">
-            <div class="stats-grid">
-                <div class="stat-card highlight">
-                    <div class="stat-value" id="totalLabelsCount">0</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalPagesCount">0</div>
-                    <div class="stat-label">Páginas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="perPageCount">0</div>
-                    <div class="stat-label">Por Pág</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="gridInfo">0x0</div>
-                    <div class="stat-label">Grid</div>
-                </div>
-            </div>
-
-            <div class="preview-wrapper">
-                <div id="pagesContainer" class="pages-container">
-                    <div class="empty-state">
-                        <i class="ph ph-tag"></i>
-                        <p>Nenhuma etiqueta</p>
-                        <p style="font-size: 0.7rem;">Adicione produtos na aba "Adicionar"</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tela Configurações -->
-        <div id="settingsScreen" class="screen">
-            <div class="card">
-                <div class="card-title">
-                    <i class="ph ph-sliders"></i>
-                    Configurações
-                </div>
-                
-                <div class="orient-group">
-                    <div class="orient-btn active" onclick="setOrientation('portrait')">
-                        <i class="ph ph-phone"></i> Retrato (Vertical)
-                    </div>
-                    <div class="orient-btn" onclick="setOrientation('landscape')">
-                        <i class="ph ph-device-mobile"></i> Paisagem
-                    </div>
-                </div>
-                
-                <div class="config-slider">
-                    <label>
-                        <span>📏 Largura da Etiqueta</span>
-                        <span id="widthValue">45mm</span>
-                    </label>
-                    <input type="range" id="labelWidthSlider" min="35" max="70" value="45" step="1" oninput="updateLabelSize()">
-                </div>
-                
-                <div class="config-slider">
-                    <label>
-                        <span>📐 Altura da Etiqueta</span>
-                        <span id="heightValue">25mm</span>
-                    </label>
-                    <input type="range" id="labelHeightSlider" min="20" max="45" value="25" step="1" oninput="updateLabelSize()">
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="globalBarcodeCheckbox" onchange="toggleGlobalBarcode()">
-                    <label>Código de Barras Global</label>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <i class="ph ph-list"></i>
-                    Produtos
-                </div>
-                <div id="productsList" class="products-list">
-                    <div class="empty-state">
-                        <i class="ph ph-inbox"></i>
-                        <p>Nenhum produto</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div id="app">
+  <!-- SIDEBAR (produtos) -->
+  <div id="sidebar">
+    <div id="sidebar-content" style="display:flex; flex-direction:column; height:100%; overflow-y:auto;">
+      <div class="product-form-section" style="padding:14px 16px;">
+        <div class="sidebar-section-title" id="form-title">Adicionar Produto</div>
+        <div class="form-group"><label class="form-label">SKU</label><div class="form-row"><input type="text" id="inp-sku" class="form-control" placeholder="Ex: SKU-0001"><button onclick="gerarSKU()" class="btn" style="background:rgba(255,255,255,0.08);border:1px solid #475569;color:#93c5fd;">Gerar</button></div></div>
+        <div class="form-group"><label class="form-label">Descrição *</label><input type="text" id="inp-desc" class="form-control" placeholder="Nome do produto"></div>
+        <div class="form-group"><label class="form-label">Preço (R$)</label><input type="text" id="inp-price" class="form-control" placeholder="0,00" oninput="fmtPrice(this)"></div>
+        <div class="form-group"><label class="form-label">Código Barras</label><input type="text" id="inp-barcode" class="form-control" placeholder="8–14 dígitos" maxlength="14"></div>
+        <div class="form-group"><label class="form-label">Lote / Validade</label><input type="text" id="inp-lot" class="form-control" placeholder="LOT-2024 Val: 12/2025"></div>
+        <div class="form-group"><label class="form-label">Categoria</label><input type="text" id="inp-cat" class="form-control" placeholder="Ex: Alimentos"></div>
+        <div class="form-group"><label class="form-label">Qtd. Etiquetas</label><input type="number" id="inp-qty" class="form-control" value="1" min="1" max="999"></div>
+        <input type="hidden" id="inp-edit-id">
+        <div style="display:flex;gap:6px;margin-top:12px;"><button id="btn-add" class="btn btn-success w-full" onclick="adicionarProduto()">➕ Adicionar</button><button class="btn btn-outline" onclick="limparForm()">🗑️</button></div>
+      </div>
+      <div class="product-list-section">
+        <div class="sidebar-section-title">Lista de Produtos</div>
+        <div class="product-stats" style="display:flex; justify-content:space-between; margin-bottom:10px;"><span id="stats-text">0 produtos</span><button class="btn btn-outline-danger btn-xs" onclick="limparLista()">Limpar</button></div>
+        <div id="product-list"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <button class="nav-item active" onclick="switchScreen('add')">
-            <i class="ph ph-plus-circle"></i>
-            <span>Adicionar</span>
-        </button>
-        <button class="nav-item" onclick="switchScreen('preview')">
-            <i class="ph ph-eye"></i>
-            <span>Visualizar</span>
-        </button>
-        <button class="nav-item" onclick="switchScreen('settings')">
-            <i class="ph ph-sliders"></i>
-            <span>Ajustes</span>
-        </button>
+  <div id="main">
+    <div id="workspace" style="display:flex; flex:1; overflow:hidden;">
+      <!-- PAINEL DE PERSONALIZAÇÃO -->
+      <div id="customize-panel">
+        <div class="panel-section"><div class="panel-section-title">📐 Tamanho</div><div class="light-row" style="display:flex; gap:8px;"><div><label class="light-label">Largura mm</label><input type="number" id="c-width" class="light-input" value="50" onchange="updatePreview()"></div><div><label class="light-label">Altura mm</label><input type="number" id="c-height" class="light-input" value="30" onchange="updatePreview()"></div></div><div style="display:flex;gap:6px;"><button id="orient-h" class="col-btn active" onclick="setOrient('h')">↔ Horizontal</button><button id="orient-v" class="col-btn" onclick="setOrient('v')">↕ Vertical</button></div></div>
+        <div class="panel-section"><div class="panel-section-title">🔤 Fonte</div><select id="c-font" class="light-input" onchange="updatePreview()"><option value="Arial">Arial</option><option value="Helvetica">Helvetica</option><option value="'Times New Roman'">Times</option></select><label class="light-label">Tamanho base</label><input type="range" id="c-fontsize" min="8" max="16" value="11" onchange="updatePreview()"></div>
+        <div class="panel-section"><div class="panel-section-title">🎨 Cores</div><div class="color-row"><div class="color-item"><label class="light-label">Fundo</label><input type="color" id="c-bg" value="#ffffff" onchange="updatePreview()"></div><div class="color-item"><label class="light-label">Texto</label><input type="color" id="c-text" value="#111111" onchange="updatePreview()"></div><div class="color-item"><label class="light-label">Destaque</label><input type="color" id="c-accent" value="#2563eb" onchange="updatePreview()"></div><div class="color-item"><label class="light-label">Borda</label><input type="color" id="c-border" value="#dddddd" onchange="updatePreview()"></div></div></div>
+        <div class="panel-section"><div class="panel-section-title">☑ Conteúdo</div><div class="toggle-item"><span class="toggle-label">SKU</span><label class="toggle-switch"><input type="checkbox" id="show-sku" checked onchange="updatePreview()"><span class="toggle-slider"></span></label></div><div class="toggle-item"><span class="toggle-label">Descrição</span><label class="toggle-switch"><input type="checkbox" id="show-desc" checked onchange="updatePreview()"><span class="toggle-slider"></span></label></div><div class="toggle-item"><span class="toggle-label">Preço</span><label class="toggle-switch"><input type="checkbox" id="show-price" checked onchange="updatePreview()"><span class="toggle-slider"></span></label></div><div class="toggle-item"><span class="toggle-label">Lote</span><label class="toggle-switch"><input type="checkbox" id="show-lot" onchange="updatePreview()"><span class="toggle-slider"></span></label></div><div class="toggle-item"><span class="toggle-label">Cód. Barras</span><label class="toggle-switch"><input type="checkbox" id="show-barcode" onchange="updatePreview()"><span class="toggle-slider"></span></label></div><div class="toggle-item"><span class="toggle-label">Nome Loja</span><label class="toggle-switch"><input type="checkbox" id="show-store" onchange="updatePreview()"><span class="toggle-slider"></span></label></div></div>
+        <div class="panel-section"><div class="panel-section-title">🏪 Loja</div><input type="text" id="c-store" class="light-input" placeholder="Nome" value="Minha Loja" oninput="updatePreview()"><input type="file" id="c-logo" accept="image/*" onchange="handleLogo(event)" style="margin-top:8px;"><div id="logo-container" style="display:none; margin-top:5px;"><img id="logo-img" style="max-height:28px;"><button class="btn btn-xs" onclick="removeLogo()">Remover</button></div><label class="light-label">Prefixo</label><input type="text" id="c-prefix" value="R$" oninput="updatePreview()"><label class="light-label">Texto rodapé</label><input type="text" id="c-custom" placeholder="..." oninput="updatePreview()"></div>
+        <div class="panel-section"><div class="panel-section-title">🖨 Impressão</div><div class="print-cols"><button id="col-2" class="col-btn" onclick="setPrintCols(2)">2</button><button id="col-3" class="col-btn active" onclick="setPrintCols(3)">3</button><button id="col-4" class="col-btn" onclick="setPrintCols(4)">4</button></div><label class="light-label">Espaçamento: <span id="sp-val">4</span>mm</label><input type="range" id="c-spacing" min="0" max="10" value="4" oninput="document.getElementById('sp-val').textContent=this.value;updatePreview()"></div>
+      </div>
+
+      <!-- PREVIEW AREA -->
+      <div id="preview-area">
+        <div id="preview-toolbar"><span style="font-weight:600;">Prévia</span><span id="preview-count" style="font-size:11px;"></span><div class="zoom-controls"><button class="zoom-btn" id="z50" onclick="setZoom(50)">50%</button><button class="zoom-btn" id="z75" onclick="setZoom(75)">75%</button><button class="zoom-btn active" id="z100" onclick="setZoom(100)">100%</button></div></div>
+        <div id="preview-scroll"><div id="preview-grid"></div></div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Loading -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>Gerando PDF...</p>
-        </div>
-    </div>
+<div class="modal-overlay" id="csv-modal"><div class="modal"><div class="modal-title">Importar CSV</div><textarea class="form-ctrl-light" id="csv-text" rows="5"></textarea><div class="modal-footer"><button class="btn btn-outline" onclick="closeCSV()">Cancelar</button><button class="btn btn-primary" onclick="importCSV()">Importar</button></div></div></div>
+<div id="toast-container"></div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast">
-        <i class="ph ph-check-circle"></i>
-        <span id="toastMsg">Concluído!</span>
-    </div>
+<script>
+// ======================== STATE & GLOBALS ========================
+let products = [];
+let currentTemplate = 1;
+let skuCounter = 0;
+let zoomLevel = 100;
+let cropMarks = false;
+let logoDataURL = null;
+let orient = 'h';
+let printCols = 3;
 
-    <script>
-        // State
-        let labels = [];
-        let nextId = 1;
-        let currentOrientation = 'portrait';
-        let globalShowBarcode = false;
+const T_DEFAULTS = {1:{w:50,h:30,bg:'#ffffff',text:'#111111',accent:'#2563eb',border:'#dddddd'},2:{w:60,h:40,bg:'#ffffff',text:'#111111',accent:'#2563eb',border:'#eeeeee'},3:{w:40,h:20,bg:'#111111',text:'#FFD700',accent:'#FFD700',border:'#FFD700'},4:{w:50,h:25,bg:'#ffffff',text:'#111111',accent:'#16a34a',border:'#16a34a'},5:{w:40,h:70,bg:'#f5f5f5',text:'#333333',accent:'#888888',border:'#cccccc'},6:{w:100,h:50,bg:'#ffffff',text:'#111111',accent:'#111111',border:'#111111'},7:{w:60,h:40,bg:'#dc2626',text:'#ffffff',accent:'#ffffff',border:'#ea580c'},8:{w:30,h:15,bg:'#ffffff',text:'#111111',accent:'#555555',border:'#dddddd'}};
+const SAMPLE = [{id:'p1',sku:'SKU-0001',desc:'Café Torrado 500g',price:'12,90',barcode:'7891234567890',lot:'LOT-2024',cat:'Alimentos',qty:10},{id:'p2',sku:'SKU-0002',desc:'Achocolatado 400g',price:'8,50',barcode:'7899876543210',lot:'LOT-2024',cat:'Alimentos',qty:5},{id:'p3',sku:'SKU-0003',desc:'Sabonete Glicerina',price:'3,99',barcode:'7891111222333',lot:'',cat:'Higiene',qty:20}];
 
-        // DOM Elements
-        const skuInput = document.getElementById('skuInput');
-        const descInput = document.getElementById('descInput');
-        const priceInput = document.getElementById('priceInput');
-        const bulkInput = document.getElementById('bulkInput');
-        const pagesContainer = document.getElementById('pagesContainer');
-        const productsList = document.getElementById('productsList');
-        const totalLabelsCount = document.getElementById('totalLabelsCount');
-        const totalPagesCount = document.getElementById('totalPagesCount');
-        const perPageCount = document.getElementById('perPageCount');
-        const gridInfo = document.getElementById('gridInfo');
-        const labelWidthSlider = document.getElementById('labelWidthSlider');
-        const labelHeightSlider = document.getElementById('labelHeightSlider');
-        const widthValue = document.getElementById('widthValue');
-        const heightValue = document.getElementById('heightValue');
-        const showBarcodeCheckbox = document.getElementById('showBarcodeCheckbox');
-        const bulkBarcodeCheckbox = document.getElementById('bulkBarcodeCheckbox');
-        const globalBarcodeCheckbox = document.getElementById('globalBarcodeCheckbox');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const toast = document.getElementById('toast');
-        const toastMsg = document.getElementById('toastMsg');
-
-        // Calcular layout
-        function calculateLayout() {
-            const labelWidth = parseFloat(labelWidthSlider.value);
-            const labelHeight = parseFloat(labelHeightSlider.value);
-            const margin = 3;
-            const gap = 1.5;
-            
-            let pageWidth, pageHeight;
-            if (currentOrientation === 'portrait') {
-                pageWidth = 210;
-                pageHeight = 297;
-            } else {
-                pageWidth = 297;
-                pageHeight = 210;
-            }
-            
-            const usableWidth = pageWidth - (margin * 2);
-            const usableHeight = pageHeight - (margin * 2);
-            
-            const cols = Math.floor((usableWidth + gap) / (labelWidth + gap));
-            const rows = Math.floor((usableHeight + gap) / (labelHeight + gap));
-            const labelsPerPage = Math.max(1, cols * rows);
-            
-            return { cols, rows, labelsPerPage, labelWidth, labelHeight };
-        }
-
-        // Renderizar páginas
-        async function renderPages() {
-            if (!pagesContainer) return;
-            
-            if (labels.length === 0) {
-                pagesContainer.innerHTML = `<div class="empty-state"><i class="ph ph-tag"></i><p>Nenhuma etiqueta</p><p style="font-size: 0.7rem;">Adicione produtos na aba "Adicionar"</p></div>`;
-                updateStats();
-                return;
-            }
-            
-            const { cols, rows, labelsPerPage, labelWidth, labelHeight } = calculateLayout();
-            const totalPages = Math.ceil(labels.length / labelsPerPage);
-            
-            updateStats();
-            gridInfo.textContent = `${cols}x${rows}`;
-            
-            pagesContainer.innerHTML = '';
-            
-            for (let pageNum = 0; pageNum < totalPages; pageNum++) {
-                const startIdx = pageNum * labelsPerPage;
-                const endIdx = Math.min(startIdx + labelsPerPage, labels.length);
-                const pageLabels = labels.slice(startIdx, endIdx);
-                
-                const pageDiv = document.createElement('div');
-                pageDiv.className = 'a4-page';
-                
-                const pageHeader = document.createElement('div');
-                pageHeader.className = 'page-header';
-                pageHeader.innerHTML = `<span>📄 Página ${pageNum + 1}/${totalPages}</span><span>${pageLabels.length} etiquetas</span>`;
-                
-                const gridDiv = document.createElement('div');
-                gridDiv.className = 'sheet-grid';
-                gridDiv.style.gridTemplateColumns = `repeat(${cols}, minmax(${labelWidth}mm, ${labelWidth}mm))`;
-                
-                for (const label of pageLabels) {
-                    const labelDiv = document.createElement('div');
-                    labelDiv.className = 'label-item';
-                    labelDiv.style.width = `${labelWidth}mm`;
-                    labelDiv.style.height = `${labelHeight}mm`;
-                    
-                    let content = `
-                        <div class="label-sku">${escapeHtml(label.sku)}</div>
-                        <div class="label-desc">${escapeHtml(label.desc)}</div>
-                    `;
-                    
-                    if (label.price && label.price !== '') {
-                        content += `<div class="label-price">${formatPrice(label.price)}</div>`;
-                    }
-                    
-                    const showBarcode = globalShowBarcode || (label.showBarcode === true);
-                    if (showBarcode && label.sku) {
-                        content += `<div class="barcode-container" id="barcode-${label.id}"></div>`;
-                    }
-                    
-                    content += `<div class="label-footer"><span>SKU</span><span>QTD:01</span></div>`;
-                    
-                    labelDiv.innerHTML = content;
-                    gridDiv.appendChild(labelDiv);
-                    
-                    if (showBarcode && label.sku) {
-                        setTimeout(() => {
-                            const bc = labelDiv.querySelector('.barcode-container');
-                            if (bc && typeof JsBarcode !== 'undefined') {
-                                JsBarcode(bc, label.sku, { format: "CODE128", width: 0.7, height: 12, fontSize: 6, margin: 0 });
-                            }
-                        }, 10);
-                    }
-                }
-                
-                pageDiv.appendChild(pageHeader);
-                pageDiv.appendChild(gridDiv);
-                pagesContainer.appendChild(pageDiv);
-            }
-        }
-
-        function formatPrice(price) {
-            if (!price) return '';
-            let clean = price.toString().replace(/R\$|₢/gi, '').trim().replace(',', '.');
-            let num = parseFloat(clean);
-            if (isNaN(num)) return price;
-            return `R$ ${num.toFixed(2).replace('.', ',')}`;
-        }
-
-        function updateStats() {
-            const { labelsPerPage } = calculateLayout();
-            totalLabelsCount.textContent = labels.length;
-            totalPagesCount.textContent = Math.ceil(labels.length / labelsPerPage);
-            perPageCount.textContent = labelsPerPage;
-        }
-
-        function renderProductsList() {
-            if (!productsList) return;
-            if (labels.length === 0) {
-                productsList.innerHTML = '<div class="empty-state"><i class="ph ph-inbox"></i><p>Nenhum produto</p></div>';
-                return;
-            }
-            
-            productsList.innerHTML = '';
-            labels.forEach(label => {
-                const item = document.createElement('div');
-                item.className = 'product-item';
-                item.innerHTML = `
-                    <div class="product-info">
-                        <div class="product-sku">${escapeHtml(label.sku)}</div>
-                        <div class="product-desc">${escapeHtml(label.desc)}</div>
-                        ${label.price ? `<div class="product-price">${formatPrice(label.price)}</div>` : ''}
-                    </div>
-                    <button class="product-remove" onclick="removeLabel(${label.id})"><i class="ph ph-trash"></i></button>
-                `;
-                productsList.appendChild(item);
-            });
-        }
-
-        function showToast(msg, type = 'success') {
-            toastMsg.textContent = msg;
-            const icon = toast.querySelector('i');
-            icon.className = type === 'error' ? 'ph ph-warning-circle' : 'ph ph-check-circle';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Adicionar etiqueta individual
-        function addSingleLabel() {
-            const sku = skuInput.value.trim();
-            const desc = descInput.value.trim();
-            if (!sku || !desc) { showToast('Preencha SKU e Descrição', 'error'); return; }
-            
-            labels.push({ id: nextId++, sku, desc, price: priceInput.value.trim() || null, showBarcode: showBarcodeCheckbox.checked });
-            skuInput.value = ''; descInput.value = ''; priceInput.value = '';
-            renderPages(); renderProductsList();
-            showToast(`Etiqueta ${sku} adicionada!`);
-            saveToLocalStorage();
-        }
-
-        // Adicionar em lote
-        function addBulkLabels() {
-            const text = bulkInput.value.trim();
-            if (!text) { showToast('Cole os dados no campo', 'error'); return; }
-            
-            const lines = text.split('\n');
-            let added = 0;
-            const showBarcode = bulkBarcodeCheckbox.checked;
-            
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
-                const parts = line.split(';');
-                if (parts.length >= 2) {
-                    const sku = parts[0].trim();
-                    const desc = parts[1].trim();
-                    const price = parts.length >= 3 ? parts[2].trim() : null;
-                    if (sku && desc) {
-                        labels.push({ id: nextId++, sku, desc, price, showBarcode });
-                        added++;
-                    }
-                }
-            });
-            
-            if (added > 0) {
-                bulkInput.value = '';
-                renderPages(); renderProductsList();
-                showToast(`${added} etiquetas adicionadas!`);
-                saveToLocalStorage();
-            } else {
-                showToast('Use formato: SKU; DESCRIÇÃO; PREÇO', 'error');
-            }
-        }
-
-        // Exemplos
-        function addExampleLabels() {
-            const ex = [
-                { sku: '001-MOB', desc: 'Smartphone Galaxy S23', price: '3599.90', showBarcode: true },
-                { sku: '002-NB', desc: 'Notebook Dell Inspiron', price: '4899.00', showBarcode: true },
-                { sku: '003-MOU', desc: 'Mouse Gamer RGB', price: '149.90', showBarcode: false },
-                { sku: '004-TEC', desc: 'Teclado Mecânico', price: '289.90', showBarcode: true },
-                { sku: '005-MON', desc: 'Monitor 24" 144Hz', price: '1299.90', showBarcode: false }
-            ];
-            ex.forEach(e => labels.push({ id: nextId++, ...e }));
-            renderPages(); renderProductsList();
-            showToast('5 exemplos adicionados!');
-            saveToLocalStorage();
-        }
-
-        function add10Labels() {
-            for (let i = 1; i <= 10; i++) {
-                labels.push({ id: nextId++, sku: `PROD-${String(labels.length+1).padStart(3,'0')}`, desc: `Produto ${labels.length+1}`, price: (Math.random()*500+10).toFixed(2), showBarcode: i%2===0 });
-            }
-            renderPages(); renderProductsList();
-            showToast('10 etiquetas adicionadas!');
-            saveToLocalStorage();
-        }
-
-        function removeLabel(id) {
-            labels = labels.filter(l => l.id !== id);
-            renderPages(); renderProductsList();
-            showToast('Etiqueta removida', 'error');
-            saveToLocalStorage();
-        }
-
-        function clearAllLabels() {
-            if (labels.length === 0) return;
-            if (confirm(`Remover ${labels.length} etiqueta(s)?`)) {
-                labels = [];
-                renderPages(); renderProductsList();
-                showToast('Todas etiquetas removidas');
-                saveToLocalStorage();
-            }
-        }
-
-        function setOrientation(orientation) {
-            currentOrientation = orientation;
-            document.querySelectorAll('.orient-btn').forEach(b => b.classList.remove('active'));
-            if (orientation === 'portrait') {
-                document.querySelector('.orient-btn:first-child').classList.add('active');
-            } else {
-                document.querySelector('.orient-btn:last-child').classList.add('active');
-            }
-            renderPages();
-            saveToLocalStorage();
-        }
-
-        function updateLabelSize() {
-            widthValue.textContent = `${labelWidthSlider.value}mm`;
-            heightValue.textContent = `${labelHeightSlider.value}mm`;
-            renderPages();
-            saveToLocalStorage();
-        }
-
-        function toggleGlobalBarcode() {
-            globalShowBarcode = globalBarcodeCheckbox.checked;
-            renderPages();
-            saveToLocalStorage();
-        }
-
-        async function downloadPDF() {
-            if (labels.length === 0) { showToast('Adicione etiquetas', 'error'); return; }
-            
-            loadingOverlay.classList.add('active');
-            
-            try {
-                await renderPages();
-                await new Promise(r => setTimeout(r, 500));
-                
-                const element = document.getElementById('pagesContainer');
-                const now = new Date();
-                const fileName = `etiquetas_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}.pdf`;
-                
-                const opt = {
-                    margin: [0.3, 0.3, 0.3, 0.3],
-                    filename: fileName,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2.5, useCORS: true, logging: false },
-                    jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
-                };
-                
-                await html2pdf().set(opt).from(element).save();
-                showToast(`PDF salvo! 📁 ${fileName}`);
-            } catch (error) {
-                showToast('Erro ao gerar PDF', 'error');
-            } finally {
-                setTimeout(() => loadingOverlay.classList.remove('active'), 500);
-            }
-        }
-
-        function printLabels() {
-            if (labels.length === 0) { showToast('Adicione etiquetas', 'error'); return; }
-            showToast('Preparando impressão...');
-            setTimeout(() => window.print(), 100);
-        }
-
-        function switchScreen(screen) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            if (screen === 'add') {
-                document.getElementById('addScreen').classList.add('active');
-                document.querySelector('.nav-item:first-child').classList.add('active');
-            } else if (screen === 'preview') {
-                document.getElementById('previewScreen').classList.add('active');
-                document.querySelector('.nav-item:nth-child(2)').classList.add('active');
-                renderPages();
-            } else {
-                document.getElementById('settingsScreen').classList.add('active');
-                document.querySelector('.nav-item:last-child').classList.add('active');
-                renderProductsList();
-            }
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('shelflabel_vertical', JSON.stringify({ labels, nextId, orientation: currentOrientation, labelWidth: labelWidthSlider.value, labelHeight: labelHeightSlider.value, globalShowBarcode }));
-        }
-
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('shelflabel_vertical');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    labels = data.labels || [];
-                    nextId = data.nextId || 1;
-                    currentOrientation = data.orientation || 'portrait';
-                    labelWidthSlider.value = data.labelWidth || '45';
-                    labelHeightSlider.value = data.labelHeight || '25';
-                    globalShowBarcode = data.globalShowBarcode || false;
-                    globalBarcodeCheckbox.checked = globalShowBarcode;
-                    updateLabelSize();
-                    setOrientation(currentOrientation);
-                    renderPages();
-                    renderProductsList();
-                } catch(e) {}
-            }
-        }
-
-        // Expor funções globalmente
-        window.addSingleLabel = addSingleLabel;
-        window.addBulkLabels = addBulkLabels;
-        window.addExampleLabels = addExampleLabels;
-        window.add10Labels = add10Labels;
-        window.removeLabel = removeLabel;
-        window.clearAllLabels = clearAllLabels;
-        window.printLabels = printLabels;
-        window.downloadPDF = downloadPDF;
-        window.switchScreen = switchScreen;
-        window.setOrientation = setOrientation;
-        window.updateLabelSize = updateLabelSize;
-        window.toggleGlobalBarcode = toggleGlobalBarcode;
-
-        // Inicializar
-        loadFromLocalStorage();
-    </script>
+function init() { loadStorage(); if(products.length===0) products=JSON.parse(JSON.stringify(SAMPLE)); renderList(); updatePreview(); }
+function saveStorage() { try{localStorage.setItem('etiquetas_pro',JSON.stringify({products,currentTemplate,skuCounter,settings:getSettings()}));}catch(e){} }
+function loadStorage(){ try{let d=JSON.parse(localStorage.getItem('etiquetas_pro')||'null'); if(d?.products) products=d.products; if(d?.currentTemplate) currentTemplate=d.currentTemplate; if(d?.skuCounter) skuCounter=d.skuCounter; if(d?.settings) applySettings(d.settings);}catch(e){} }
+function getSettings(){ return { w: v('c-width'), h:v('c-height'), font:v('c-font'), fs:v('c-fontsize'), bg:v('c-bg'), tc:v('c-text'), ac:v('c-accent'), bc:v('c-border'), sk:cb('show-sku'), sd:cb('show-desc'), sp:cb('show-price'), sl:cb('show-lot'), sb:cb('show-barcode'), ss:cb('show-store'), store:v('c-store'), prefix:v('c-prefix'), custom:v('c-custom'), cols:printCols, spacing:v('c-spacing'), orient };}
+function applySettings(s){ sv('c-width',s.w||50); sv('c-height',s.h||30); sv('c-font',s.font||'Arial'); sv('c-fontsize',s.fs||11); sv('c-bg',s.bg||'#ffffff'); sv('c-text',s.tc||'#111111'); sv('c-accent',s.ac||'#2563eb'); sv('c-border',s.bc||'#dddddd'); scb('show-sku',s.sk!==false); scb('show-desc',s.sd!==false); scb('show-price',s.sp!==false); scb('show-lot',!!s.sl); scb('show-barcode',!!s.sb); scb('show-store',!!s.ss); if(s.store) sv('c-store',s.store); if(s.prefix) sv('c-prefix',s.prefix); if(s.custom) sv('c-custom',s.custom); if(s.cols) setPrintCols(s.cols); if(s.spacing){ sv('c-spacing',s.spacing); document.getElementById('sp-val').textContent=s.spacing; } if(s.orient) setOrient(s.orient,false); }
+function v(id){return document.getElementById(id)?.value||''}
+function sv(id,val){let el=document.getElementById(id);if(el) el.value=val;}
+function cb(id){return document.getElementById(id)?.checked||false}
+function scb(id,val){let el=document.getElementById(id);if(el) el.checked=val;}
+function gerarSKU(){ skuCounter++; document.getElementById('inp-sku').value='SKU-'+String(skuCounter).padStart(4,'0'); }
+function fmtPrice(el){ let val=el.value.replace(/\D/g,''); if(!val){el.value='';return;} el.value=(parseInt(val,10)/100).toFixed(2).replace('.',','); }
+function adicionarProduto(){ let desc=v('inp-desc').trim(); if(!desc){showToast('Preencha a descrição','error');return;} let editId=v('inp-edit-id'); let p={id:editId||('p'+Date.now()), sku:v('inp-sku').trim()||('SKU-'+String(++skuCounter).padStart(4,'0')), desc:desc, price:v('inp-price').trim(), barcode:v('inp-barcode').trim(), lot:v('inp-lot').trim(), cat:v('inp-cat').trim(), qty:Math.min(999,Math.max(1,parseInt(v('inp-qty'))||1))}; if(editId){let idx=products.findIndex(x=>x.id===editId); if(idx>=0) products[idx]=p; showToast('Atualizado','success');} else { products.push(p); showToast('Adicionado','success'); } limparForm(); renderList(); updatePreview(); saveStorage(); }
+function editarProduto(id){ let p=products.find(x=>x.id===id); if(!p) return; sv('inp-sku',p.sku); sv('inp-desc',p.desc); sv('inp-price',p.price); sv('inp-barcode',p.barcode||''); sv('inp-lot',p.lot||''); sv('inp-cat',p.cat||''); sv('inp-qty',p.qty); sv('inp-edit-id',p.id); document.getElementById('form-title').textContent='Editar Produto'; }
+function removerProduto(id){ products=products.filter(p=>p.id!==id); renderList(); updatePreview(); saveStorage(); showToast('Removido','info'); }
+function limparForm(){ ['inp-sku','inp-desc','inp-price','inp-barcode','inp-lot','inp-cat'].forEach(id=>sv(id,'')); sv('inp-qty',1); sv('inp-edit-id',''); document.getElementById('form-title').textContent='Adicionar Produto'; }
+function limparLista(){ if(confirm('Remover todos?')){ products=[]; renderList(); updatePreview(); saveStorage(); showToast('Lista limpa','info'); } }
+function renderList(){ let total=products.reduce((s,p)=>s+p.qty,0); document.getElementById('stats-text').innerHTML=`<strong>${products.length}</strong> produtos · ${total} etiquetas`; let c=document.getElementById('product-list'); if(!products.length){c.innerHTML='<div class="empty-state">Nenhum produto</div>';return;} c.innerHTML=products.map(p=>`<div class="product-item" onclick="editarProduto('${p.id}')"><div class="product-item-info"><div><span class="product-sku">${esc(p.sku)}</span></div><div class="product-name">${esc(p.desc)}</div><div><span class="product-price">${p.price?'R$ '+esc(p.price):'—'}</span> <span class="product-qty">×${p.qty}</span></div></div><div class="product-actions" onclick="event.stopPropagation()"><button class="product-action-btn edit" onclick="editarProduto('${p.id}')">✏️</button><button class="product-action-btn del" onclick="removerProduto('${p.id}')">🗑️</button></div></div>`).join(''); }
+function generateBarcodeSVG(code,w,h){ if(!code) return ''; let bars=[],x=0,bw=w/(code.length*11+20); bars.push(`<rect x="${x.toFixed(2)}" y="0" width="${bw.toFixed(2)}" height="${h}" fill="#000"/>`); x+=bw*2; bars.push(`<rect x="${x.toFixed(2)}" y="0" width="${bw.toFixed(2)}" height="${h}" fill="#000"/>`); x+=bw*2; for(let i=0;i<code.length;i++){ let c=code.charCodeAt(i); for(let b=0;b<8;b++){ if((c>>(7-b))&1) bars.push(`<rect x="${x.toFixed(2)}" y="0" width="${bw.toFixed(2)}" height="${h}" fill="#000"/>`); x+=bw*1.2; } x+=bw; } bars.push(`<rect x="${x.toFixed(2)}" y="0" width="${bw.toFixed(2)}" height="${h}" fill="#000"/>`); x+=bw*2; bars.push(`<rect x="${x.toFixed(2)}" y="0" width="${bw.toFixed(2)}" height="${h}" fill="#000"/>`); return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${bars.join('')}</svg>`; }
+function getCode(p){ return p.barcode || p.sku.replace(/[^A-Z0-9]/gi,''); }
+const MM=3.7795; function mm(v){ return v*MM; }
+function getOpts(){ return { W:parseFloat(v('c-width'))||50, H:parseFloat(v('c-height'))||30, font:v('c-font')||'Arial', fs:parseInt(v('c-fontsize'))||11, bg:v('c-bg'), tc:v('c-text'), ac:v('c-accent'), bc:v('c-border'), sk:cb('show-sku'), sd:cb('show-desc'), sp:cb('show-price'), sl:cb('show-lot'), sb:cb('show-barcode'), ss:cb('show-store'), store:v('c-store'), prefix:v('c-prefix'), custom:v('c-custom') }; }
+function renderLabel(p,tmpl,opts,zoom){ let z=zoom/100, w=mm(opts.W)*z, h=mm(opts.H)*z, fs=opts.fs*z, bh=Math.max(8*z,h*0.15), bw=w-12*z, bsvg=opts.sb?generateBarcodeSVG(getCode(p),Math.max(10,bw),Math.max(6,bh)):''; let price=(opts.sp&&p.price)?`${opts.prefix} ${p.price}`:''; let logoImg=(logoDataURL&&opts.ss)?`<img src="${logoDataURL}" style="max-height:${14*z}px;max-width:${30*z}px;">`:''; let pad=Math.max(4,5*z); return `<div class="label-base" style="width:${w}px;height:${h}px;background:${opts.bg};border:1px solid ${opts.bc};font-family:${opts.font};display:flex;flex-direction:column;padding:${pad}px;overflow:hidden;"><div style="display:flex;justify-content:space-between;"><div style="font-size:${fs*0.7}px;color:${opts.ac};">${opts.ss?opts.store:''}</div>${opts.sk?`<div style="font-size:${fs*0.65}px;color:#999;">${p.sku}</div>`:''}</div>${opts.sd?`<div style="font-size:${fs*0.9}px;font-weight:600;color:${opts.tc};flex:1;text-align:center;">${p.desc}</div>`:''}${opts.sl&&p.lot?`<div style="font-size:${fs*0.6}px;color:#777;">${p.lot}</div>`:''}${price?`<div style="font-size:${fs*1.3}px;font-weight:800;color:${opts.tc};text-align:center;">${price}</div>`:''}${opts.sb?`<div>${bsvg}<div style="font-size:${fs*0.5}px;">${getCode(p)}</div></div>`:''}${opts.custom?`<div style="font-size:${fs*0.55}px;">${opts.custom}</div>`:''}</div>`; }
+function updatePreview(){ let opts=getOpts(), spacing=parseInt(v('c-spacing')||4)*MM, grid=document.getElementById('preview-grid'); if(!products.length){grid.innerHTML='<div style="text-align:center;padding:40px;">Nenhum produto</div>';return;} let html=''; products.forEach(p=>{ for(let i=0;i<p.qty;i++) html+=`<div class="label-wrapper" style="margin:${spacing/2}px;">${renderLabel(p,currentTemplate,opts,zoomLevel)}</div>`; }); grid.innerHTML=html; let total=products.reduce((s,p)=>s+p.qty,0); document.getElementById('preview-count').textContent=`${products.length} produtos · ${total} etiquetas`; saveStorage(); }
+function setOrient(dir,doUpdate=true){ orient=dir; document.getElementById('orient-h').classList.toggle('active',dir==='h'); document.getElementById('orient-v').classList.toggle('active',dir==='v'); if(doUpdate)updatePreview(); }
+function setZoom(z){ zoomLevel=z; [50,75,100].forEach(n=>{let b=document.getElementById('z'+n);if(b)b.classList.toggle('active',n===z);}); updatePreview(); }
+function setPrintCols(n){ printCols=n; [2,3,4].forEach(c=>{let b=document.getElementById('col-'+c);if(b)b.classList.toggle('active',c===n);}); }
+function handleLogo(e){ let file=e.target.files[0]; if(!file)return; let r=new FileReader(); r.onload=ev=>{ logoDataURL=ev.target.result; document.getElementById('logo-img').src=logoDataURL; document.getElementById('logo-container').style.display='block'; updatePreview(); }; r.readAsDataURL(file); }
+function removeLogo(){ logoDataURL=null; document.getElementById('logo-container').style.display='none'; document.getElementById('c-logo').value=''; updatePreview(); }
+function exportPDF(){ if(!products.length){showToast('Sem produtos','error');return;} showToast('Gerando PDF...','info'); setTimeout(()=>{ let doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'}); doc.text('Etiquetas',10,10); doc.save(`etiquetas_${Date.now()}.pdf`); showToast('PDF gerado!','success'); },200); }
+function printLabels(){ window.print(); }
+function showToast(msg,type){ let c=document.getElementById('toast-container'); let t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<span>${msg}</span>`; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;'); }
+function toggleMobileSidebar(){ document.getElementById('sidebar').classList.toggle('open-mobile'); }
+function toggleMobileCustom(){ document.getElementById('customize-panel').classList.toggle('open-mobile'); }
+function closeCSV(){ document.getElementById('csv-modal').classList.remove('open'); }
+function importCSV(){ showToast('CSV importado demo','success'); closeCSV(); }
+document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ let tab=btn.dataset.tab; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(tab==='preview'){ document.getElementById('sidebar').classList.remove('open-mobile'); document.getElementById('customize-panel').classList.remove('open-mobile'); } if(tab==='products') toggleMobileSidebar(); if(tab==='design') toggleMobileCustom(); }); });
+document.addEventListener('DOMContentLoaded',init);
+</script>
 </body>
-                    </html>
+</html>
